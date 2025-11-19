@@ -1,7 +1,10 @@
 package triplestar.mixchat.domain.chat.chat.repository;
 
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import triplestar.mixchat.domain.chat.chat.entity.ChatMember;
+import triplestar.mixchat.domain.member.member.entity.Member;
 
 public interface ChatRoomMemberRepository extends JpaRepository<ChatMember, Long> {
 
@@ -13,4 +16,12 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatMember, Long
      * @return 멤버이면 true, 아니면 false
      */
     boolean existsByChatRoom_IdAndMember_Id(Long chatRoomId, Long memberId);
+
+    @Query("""
+            SELECT cm FROM ChatMember cm 
+            WHERE cm.chatRoom.id = :roomId 
+            AND cm.member.id <> :senderId
+            """
+    )
+    List<ChatMember> findByChatRoomId(Long roomId, Long senderId);
 }
