@@ -28,6 +28,9 @@ spring:
       pageable:
         max-page-size: 100
 
+  elasticsearch:
+    uris: http://localhost:9200
+
   ai:
     openai:
       base-url: https://api.openai.com
@@ -35,7 +38,9 @@ spring:
       chat:
         options:
           model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
-
+      embedding:
+        options:
+          model: text-embedding-3-small
     ollama:
       base-url: ${OLLAMA_API_URL:https://ollama.yhcho.com/ollama}
       api-key: ${OLLAMA_API_KEY}
@@ -51,6 +56,7 @@ spring:
 #          chat:
 #            options:
 #              model: ${VERTEX_AI_MODEL:gemini-1.5-flash}
+
 
 swagger:
   redirect:

@@ -88,6 +88,11 @@ dependencies {
 
     // websocket
     implementation("org.springframework.boot:spring-boot-starter-websocket")
+
+    // Elasticsearch
+    implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch") // Elasticsearch
+    implementation(kotlin("stdlib-jdk8"))
+    implementation("co.elastic.clients:elasticsearch-java:8.17.3")
 }
 
 dependencyManagement {
@@ -99,4 +104,5 @@ dependencyManagement {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    maxHeapSize = "2048m"
 }
