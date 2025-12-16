@@ -24,7 +24,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    open-in-view: false
 
   flyway:
     enabled: false
@@ -87,7 +86,7 @@ spring:
       api-key: ${OPENAI_API_KEY}
       chat:
         options:
-          model: ${OPENAI_CHAT_MODEL:gpt-5.1}
+          model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
       embedding:
         options:
           model: text-embedding-3-small
