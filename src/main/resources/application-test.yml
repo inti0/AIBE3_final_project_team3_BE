@@ -32,6 +32,10 @@ spring:
     uris: http://localhost:9200
     connection-timeout: 5s
     socket-timeout: 10s
+    repositories:
+      enabled: ${MIXCHAT_SEARCH_ENABLED:true}
+    auto-index-creation: ${MIXCHAT_SEARCH_ENABLED:true}
+
 logging:
   level:
     org.hibernate.sql: debug

@@ -2,6 +2,7 @@ package triplestar.mixchat.domain.learningNote.learningNote.service;
 
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import triplestar.mixchat.domain.learningNote.learningNote.document.LearningNoteDocument;
@@ -10,6 +11,7 @@ import triplestar.mixchat.domain.learningNote.learningNote.entity.LearningNote;
 import triplestar.mixchat.domain.learningNote.learningNote.repository.LearningNoteDocumentRepository;
 
 @Service
+@ConditionalOnProperty(prefix = "mixchat.search", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class LearningNoteEmbeddingService {
     private final EmbeddingModel embeddingModel;
     private final LearningNoteDocumentRepository noteDocumentRepository;

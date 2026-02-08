@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,8 @@ import triplestar.mixchat.domain.learningNote.learningNote.repository.LearningNo
 import triplestar.mixchat.global.cache.LearningNoteCacheRepository;
 
 @Service
-public class LearningNoteRagService {
+@ConditionalOnProperty(prefix = "mixchat.search", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class LearningNoteRagService implements LearningNoteRagPort {
 
     private final LearningNoteDocumentRepository noteDocumentRepository;
     private final LearningNoteRepository learningNoteRepository;
@@ -35,6 +37,7 @@ public class LearningNoteRagService {
         this.learningNoteCacheRepository = learningNoteCacheRepository;
     }
 
+    @Override
     public void saveByRecentNotes(Long roomId, Long memberId) {
         // 캐시 체크
         List<Long> cached = learningNoteCacheRepository.get(roomId, memberId);
@@ -88,6 +91,7 @@ public class LearningNoteRagService {
         learningNoteCacheRepository.save(roomId, memberId, topIds);
     }
 
+    @Override
     public List<LearningNote> loadNotesFromCache(Long roomId, Long memberId) {
         List<Long> ids = learningNoteCacheRepository.get(roomId, memberId);
 

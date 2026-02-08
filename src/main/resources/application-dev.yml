@@ -23,3 +23,7 @@ cookie:
 management:
   server:
     port: 8080
+
+mixchat:
+  search:
+    enabled: ${MIXCHAT_SEARCH_ENABLED:false}

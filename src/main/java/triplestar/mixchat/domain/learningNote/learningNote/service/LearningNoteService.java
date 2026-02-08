@@ -2,6 +2,7 @@ package triplestar.mixchat.domain.learningNote.learningNote.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,7 +26,9 @@ public class LearningNoteService {
     private final LearningNoteRepository learningNoteRepository;
     private final MemberRepository memberRepository;
     private final FeedbackRepository feedbackRepository;
-    private final LearningNoteEmbeddingService embeddingService;
+
+    @Autowired(required = false)
+    private LearningNoteEmbeddingService embeddingService;
 
     @Transactional
     public Long createWithFeedbacks(LearningNoteCreateReq req, Long memberId) {
@@ -42,7 +45,9 @@ public class LearningNoteService {
         }
         learningNoteRepository.save(note);
 
-        embeddingService.index(note);
+        if (embeddingService != null) {
+            embeddingService.index(note);
+        }
 
         return note.getId();
     }

@@ -59,6 +59,15 @@ EOF
 sed -i "s|^MYSQL_HOST=.*|MYSQL_HOST=${app_1_db_host}|" /opt/mixchat/.env.prod.properties
 sed -i "s|^AWS_S3_BUCKET=.*|AWS_S3_BUCKET=${app_1_s3_bucket}|" /opt/mixchat/.env.prod.properties
 
+# (선택) 특정 앱 이미지(불변 태그)로 배포하고 싶을 때 Terraform var.app_1_image로 전달
+if [ -n "${app_1_image}" ]; then
+  if grep -q '^MIXCHAT_IMAGE=' /opt/mixchat/.env.prod.properties; then
+    sed -i "s|^MIXCHAT_IMAGE=.*|MIXCHAT_IMAGE=${app_1_image}|" /opt/mixchat/.env.prod.properties
+  else
+    echo "MIXCHAT_IMAGE=${app_1_image}" >> /opt/mixchat/.env.prod.properties
+  fi
+fi
+
 %{ for file in compose_support_files ~}
 cat <<'EOF' | base64 -d > ${file.path}
 ${file.content_b64}

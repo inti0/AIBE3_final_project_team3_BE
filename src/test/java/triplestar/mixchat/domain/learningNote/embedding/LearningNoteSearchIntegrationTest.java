@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,6 +31,7 @@ import triplestar.mixchat.domain.member.member.entity.Password;
 import triplestar.mixchat.domain.member.member.repository.MemberRepository;
 import triplestar.mixchat.domain.translation.translation.constant.TranslationTagCode;
 
+@EnabledIfSystemProperty(named = "mixchat.search.enabled", matches = "true")
 @ActiveProfiles("test")
 @SpringBootTest
 @Transactional
@@ -164,4 +166,3 @@ public class LearningNoteSearchIntegrationTest {
 //        }
     }
 }
-

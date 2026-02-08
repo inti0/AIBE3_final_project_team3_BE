@@ -14,11 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import triplestar.mixchat.global.customException.ServiceException;
 import triplestar.mixchat.global.response.CustomResponse;
 
@@ -134,6 +133,19 @@ public class GlobalExceptionHandler {
                         "접근 권한이 없습니다."
                 ),
                 FORBIDDEN
+        );
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<CustomResponse<Void>> handle(NoResourceFoundException e) {
+        commonExceptionLog(e);
+
+        return new ResponseEntity<>(
+                new CustomResponse<>(
+                        NOT_FOUND.value(),
+                        "요청하신 경로를 찾을 수 없습니다."
+                ),
+                NOT_FOUND
         );
     }
 
