@@ -1,14 +1,15 @@
 version: '3.8'
 services:
+  # demo용은 prod 구성을 그대로 include하기 어렵기 때문에,
+  # 운영(docker-compose-prod.yml)을 복제해서 seed(init__data__)까지 포함하도록 유지하는 파일입니다.
+  # 운영에서는 docker-compose-prod.yml + (선택) flyway schema-only 사용을 권장합니다.
+
   mixchat:
-    # 배포 시점에 .env.prod.properties(또는 compose --env-file)로 MIXCHAT_IMAGE를 주입하면
-    # 특정 버전(불변 태그)으로 재현 가능한 배포가 가능합니다.
-    # 예: MIXCHAT_IMAGE=ghcr.io/inti0/mixchat:20260201-abc123
     image: ${MIXCHAT_IMAGE:-ghcr.io/inti0/mixchat:latest}
     container_name: mixchat
     restart: always
     env_file:
-      - .env.prod.properties
+      - .env.demo.properties
     networks:
       mixchat-network:
         aliases:
@@ -19,7 +20,7 @@ services:
     container_name: redis
     restart: always
     env_file:
-      - .env.prod.properties
+      - .env.demo.properties
     volumes:
       - redis_data:/data
     command: sh -c "redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}"
@@ -31,25 +32,20 @@ services:
     depends_on:
       - redis
     env_file:
-      - .env.prod.properties
+      - .env.demo.properties
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     entrypoint: >
       sh -c "sleep 5 && cat /init.redis | redis-cli -h redis -a ${REDIS_PASSWORD} --no-auth-warning"
     volumes:
       - ./docker/config/redis/init.redis:/init.redis
-    healthcheck:
-      test: [ "CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping" ]
-      interval: 5s
-      timeout: 3s
-      retries: 5
 
   mongo:
     image: mongo:6.0
     container_name: mongo
     restart: always
     env_file:
-      - .env.prod.properties
+      - .env.demo.properties
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
@@ -66,7 +62,7 @@ services:
     container_name: nginx-proxy-manager
     restart: always
     env_file:
-      - .env.prod.properties
+      - .env.demo.properties
     environment:
       DISABLE_IPV6: 'true'
     ports:
@@ -81,57 +77,23 @@ services:
         aliases:
           - nginx-proxy-manager
 
+  # demo에서는 schema + seed 포함
   flyway:
     image: flyway/flyway:9
     container_name: mixchat-flyway
     restart: "no"
     env_file:
-      - .env.prod.properties
+      - .env.demo.properties
     command: >
       -url=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT:-3306}/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true
       -user=${MYSQL_USER}
       -password=${MYSQL_PASSWORD}
       -connectRetries=30
-      -locations=filesystem:/flyway/sql/schema
+      -locations=filesystem:/flyway/sql/schema,filesystem:/flyway/sql/seed
       migrate
     volumes:
       - ./docker/config/flyway/schema:/flyway/sql/schema:ro
-    networks:
-      - mixchat-network
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    restart: always
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./docker/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
-    networks:
-      - mixchat-network
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    restart: always
-    ports:
-      - "3001:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./docker/config/grafana/provisioning:/etc/grafana/provisioning
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_INSTALL_PLUGINS=grafana-piechart-panel
-    depends_on:
-      - prometheus
+      - ./docker/config/flyway/seed:/flyway/sql/seed:ro
     networks:
       - mixchat-network
 
@@ -140,7 +102,7 @@ services:
     container_name: rabbitmq
     restart: always
     env_file:
-      - .env.prod.properties
+      - .env.demo.properties
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
@@ -151,11 +113,6 @@ services:
       rabbitmq-plugins enable rabbitmq_stomp rabbitmq_web_stomp rabbitmq_management &&
       rabbitmq-server
       "
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - mixchat-network
 
@@ -171,15 +128,9 @@ services:
 
 volumes:
   redis_data:
-    driver: local
   mongo_data:
-    driver: local
   npm_data:
-    driver: local
   npm_letsencrypt:
-    driver: local
-  prometheus_data:
-  grafana_data:
   rabbitmq_data:
   elasticsearch_data:
 

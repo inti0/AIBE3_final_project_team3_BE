@@ -52,7 +52,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@localhost:27017/${MONGO_DB}?authSource=admin&minPoolSize=10&maxPoolSize=100&maxIdleTimeMS=60000
+      uri: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@${MONGO_HOST:localhost}:${MONGO_PORT:27017}/${MONGO_DB}?authSource=admin&minPoolSize=10&maxPoolSize=100&maxIdleTimeMS=60000
 
     redis:
       host: ${REDIS_HOST:localhost}
@@ -71,6 +71,9 @@ spring:
 
   elasticsearch:
     uris: http://localhost:9200
+    repositories:
+      enabled: ${MIXCHAT_SEARCH_ENABLED:true}
+    auto-index-creation: ${MIXCHAT_SEARCH_ENABLED:true}
 
   application:
     name: mixchat
@@ -86,6 +89,8 @@ spring:
       api-key: ${OPENAI_API_KEY}
       chat:
         options:
+          # env 파일(.env*.properties)은 반드시 KEY=VALUE 형식이어야 하며,
+          # 아래는 Spring placeholder 기본값 표기(${VAR:default})입니다.
           model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
       embedding:
         options:
@@ -124,6 +129,10 @@ management:
     health:
       show-details: always
 
+  health:
+    elasticsearch:
+      enabled: ${MIXCHAT_SEARCH_ENABLED:true}
+
   metrics:
     tags:
       application: ${spring.application.name:mixchat}
@@ -132,7 +141,15 @@ management:
         http.server.requests: true
 
 cors:
-  allowed-origins: "http://localhost:3000,https://mixchat.site,https://www.mixchat.site"
+  # 프론트(브라우저) Origin 목록
+  # - 로컬 개발: http://localhost:3000
+  # - 운영(Vercel): https://mixchat.inti0.shop
+  allowed-origins: http://localhost:3000, https://mixchat.inti0.shop
+# refresh token cookie domain
+# - 운영: mixchat.inti0.shop (api/mixchat 서브도메인 공유)
+# - 로컬: localhost
+cookie:
+  domain: "${custom.site.cookieDomain}"
 
 server:
   port: 8080
@@ -152,15 +169,22 @@ custom:
     frontUrl: "http://${custom.dev.cookieDomain}:3000"
     backUrl: "http://${custom.dev.cookieDomain}:${server.port}"
   prod:
-    cookieDomain: mixchat.site
-    frontUrl: "https://www.${custom.prod.cookieDomain}"
+    cookieDomain: mixchat.inti0.shop
+    frontUrl: "https://${custom.prod.cookieDomain}"
     backUrl: "https://api.${custom.prod.cookieDomain}"
   staging:
     cookieDomain: staging.mixchat.site
     frontUrl: "https://www.${custom.staging.cookieDomain}"
     backUrl: "https://api.${custom.staging.cookieDomain}"
   site:
-    cookieDomain: "${custom.dev.cookieDomain}"
-    frontUrl: "${custom.dev.frontUrl}"
-    backUrl: "${custom.dev.backUrl}"
+    # active profile에 따라 사이트 설정을 선택
+    # - dev: localhost
+    # - prod: mixchat.inti0.shop
+    # - staging: staging.mixchat.site
+    cookieDomain: "${custom.${spring.profiles.active}.cookieDomain}"
+    frontUrl: "${custom.${spring.profiles.active}.frontUrl}"
+    backUrl: "${custom.${spring.profiles.active}.backUrl}"
     name: mixchat
+mixchat:
+  search:
+    enabled: ${MIXCHAT_SEARCH_ENABLED:true}

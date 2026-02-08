@@ -282,6 +282,10 @@ locals {
     {
       path        = "/opt/mixchat/docker/config/mongo/init.js"
       content_b64 = base64encode(file("${path.module}/../docker/config/mongo/init.js"))
+    },
+    {
+      path        = "/opt/mixchat/elasticsearch.yml"
+      content_b64 = base64encode(file("${path.module}/../elasticsearch.yml"))
     }
   ]
 
@@ -308,8 +312,9 @@ locals {
       path        = file.path
       content_b64 = file.content_b64
     }]
-    app_1_s3_bucket              = aws_s3_bucket.prod_bucket.bucket
+    app_1_s3_bucket             = aws_s3_bucket.prod_bucket.bucket
     application_secret_yaml_b64  = local.application_secret_yaml_b64
+    app_1_image                 = var.app_1_image
   })
 
 #  ec2_2_user_data_base = templatefile("${path.module}/templates/user_data_2.sh.tftpl", {
@@ -332,7 +337,7 @@ locals {
 #  })
 
   ec2_1_user_data_base64 = base64gzip(local.ec2_1_user_data_base)
-#  ec2_2_user_data_base64 = base64gzip(local.ec2_2_user_data_base)
+#  ec2_2_user_data_base64 = base64gzip(local.ec2_2_user_data)
 }
 
 # 최신 Amazon Linux 2023 AMI 조회 (프리 티어 호환)
@@ -366,7 +371,7 @@ resource "aws_instance" "ec2_1" {
   # 사용할 AMI ID
   ami = data.aws_ami.latest_amazon_linux.id
   # EC2 인스턴스 유형
-  instance_type = "t3.small"
+  instance_type = "t3.micro"
   # 사용할 서브넷 ID
   subnet_id = aws_subnet.subnet_2.id
   # 적용할 보안 그룹 ID
@@ -385,7 +390,7 @@ resource "aws_instance" "ec2_1" {
   # 루트 볼륨 설정
   root_block_device {
     volume_type = "gp3"
-    volume_size = 30 # 볼륨 크기를 12GB로 설정
+    volume_size = 20 # 볼륨 크기를 12GB로 설정
   }
 
   user_data_base64 = local.ec2_1_user_data_base64
@@ -418,7 +423,7 @@ resource "aws_db_instance" "app_1_db" {
   copy_tags_to_snapshot      = true
   multi_az                   = var.rds_multi_az
   publicly_accessible        = true
-  storage_encrypted          = true
+  storage_encrypted          = false
   deletion_protection        = false
   auto_minor_version_upgrade = true
   apply_immediately          = true
