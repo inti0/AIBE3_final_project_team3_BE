@@ -9,9 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
-import triplestar.mixchat.domain.learningNote.entity.LearningNote;
-import triplestar.mixchat.domain.learningNote.repository.LearningNoteRepository;
-import triplestar.mixchat.domain.learningNote.service.LearningNoteRagService;
+import triplestar.mixchat.domain.learningNote.learningNote.entity.LearningNote;
+import triplestar.mixchat.domain.learningNote.learningNote.repository.LearningNoteRepository;
 
 @Component
 @Slf4j
@@ -26,7 +25,7 @@ public class SqlContextRetriever {
             @Value("${ai.context-retriever.sql.min}")
             int minItems,
             @Value("${ai.context-retriever.sql.max}")
-            int maxItems, LearningNoteRagService learningNoteSearchService
+            int maxItems
     ) {
         this.learningNoteRepository = learningNoteRepository;
         this.minItems = minItems;

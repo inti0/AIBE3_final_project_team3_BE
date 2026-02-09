@@ -7,13 +7,13 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import triplestar.mixchat.domain.learningNote.entity.LearningNote;
-import triplestar.mixchat.domain.learningNote.service.LearningNoteRagService;
+import triplestar.mixchat.domain.learningNote.learningNote.entity.LearningNote;
+import triplestar.mixchat.domain.learningNote.learningNote.service.LearningNoteRagPort;
 
 @Component
 @RequiredArgsConstructor
 public class RagContextRetriever {
-    private final LearningNoteRagService learningNoteRagService;
+    private final LearningNoteRagPort learningNoteRagService;
 
     public List<UserContextChunk> retrieve(Long roomId, Long userId) {
         List<LearningNote> notes = learningNoteRagService.loadNotesFromCache(roomId, userId);

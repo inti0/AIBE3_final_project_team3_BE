@@ -38,6 +38,7 @@ public class DirectChatRoomService {
     private final SystemMessageService systemMessageService;
     private final triplestar.mixchat.domain.chat.chat.repository.ChatMessageRepository chatMessageRepository;
     private final ChatSequenceGenerator chatSequenceGenerator;
+    // todo: 각 서비스 Facade패턴 도입 고려
 
     private Member findMemberById(Long memberId) {
         return memberRepository.findById(memberId)

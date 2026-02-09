@@ -13,13 +13,13 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import triplestar.mixchat.domain.translation.translation.constant.TranslationTagCode;
-import triplestar.mixchat.global.jpa.entity.BaseEntityNoModified;
+import triplestar.mixchat.global.jpa.entity.BaseEntity;
 
 @Entity
 @Table(name = "feedbacks")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Feedback extends BaseEntityNoModified {
+public class Feedback extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "learning_note_id", nullable = false)
@@ -38,7 +38,7 @@ public class Feedback extends BaseEntityNoModified {
     @Column(nullable = false)
     private String extra;
 
-    @Column(name = "is_marked", nullable = false)
+    @Column(name = "is_marked", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean marked = false;
 
     private Feedback(LearningNote learningNote,

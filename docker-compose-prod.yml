@@ -1,13 +1,25 @@
 version: '3.8'
 services:
+  mixchat:
+    # 배포 시점에 .env.prod.properties(또는 compose --env-file)로 MIXCHAT_IMAGE를 주입하면
+    # 특정 버전(불변 태그)으로 재현 가능한 배포가 가능합니다.
+    # 예: MIXCHAT_IMAGE=ghcr.io/inti0/mixchat:20260201-abc123
+    image: ${MIXCHAT_IMAGE:-ghcr.io/inti0/mixchat:latest}
+    container_name: mixchat
+    restart: always
+    env_file:
+      - .env.prod.properties
+    networks:
+      mixchat-network:
+        aliases:
+          - mixchat
+
   redis:
     image: redis:8.0
     container_name: redis
     restart: always
     env_file:
       - .env.prod.properties
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     command: sh -c "redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}"
@@ -42,8 +54,6 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
       MONGO_INITDB_DATABASE: ${MONGO_DB}
-    ports:
-      - "27017:27017"
     volumes:
       - mongo_data:/data/db
       - ./docker/config/mongo/schema.js:/docker-entrypoint-initdb.d/schema.js
@@ -66,6 +76,29 @@ services:
     volumes:
       - npm_data:/data
       - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      mixchat-network:
+        aliases:
+          - nginx-proxy-manager
+
+  flyway:
+    image: flyway/flyway:9
+    container_name: mixchat-flyway
+    restart: "no"
+    env_file:
+      - .env.prod.properties
+    command: >
+      -url=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT:-3306}/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true
+      -user=${MYSQL_USER}
+      -password=${MYSQL_PASSWORD}
+      -connectRetries=30
+      -locations=filesystem:/flyway/sql/schema
+      migrate
+    volumes:
+      - ./docker/config/flyway/schema:/flyway/sql/schema:ro
+    networks:
+      - mixchat-network
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -107,14 +140,10 @@ services:
     container_name: rabbitmq
     restart: always
     env_file:
-      - .env
+      - .env.prod.properties
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
-    ports:
-      - "5672:5672"    # AMQP
-      - "15672:15672"  # Management UI
-      - "61613:61613"  # STOMP
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     command: >
@@ -135,10 +164,10 @@ services:
     volumes:
       - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
       - elasticsearch_data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
     environment:
       discovery.type: single-node
+    networks:
+      - mixchat-network
 
 volumes:
   redis_data:

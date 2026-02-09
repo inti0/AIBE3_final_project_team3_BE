@@ -17,10 +17,10 @@ import triplestar.mixchat.domain.chat.chat.entity.AIChatRoom;
 import triplestar.mixchat.domain.chat.chat.entity.ChatMember;
 import triplestar.mixchat.domain.chat.chat.repository.AIChatRoomRepository;
 import triplestar.mixchat.domain.chat.chat.repository.ChatRoomMemberRepository;
-import triplestar.mixchat.domain.learningNote.service.LearningNoteRagService;
+import triplestar.mixchat.domain.learningNote.learningNote.service.LearningNoteRagPort;
 import triplestar.mixchat.domain.member.member.entity.Member;
 import triplestar.mixchat.domain.member.member.repository.MemberRepository;
-import triplestar.mixchat.global.ai.BotMemberIdProvider;
+import triplestar.mixchat.global.ai.BotConstant;
 import triplestar.mixchat.global.cache.ChatAuthCacheService;
 import triplestar.mixchat.global.cache.LearningNoteCacheRepository;
 
@@ -37,8 +37,7 @@ public class AIChatRoomService {
     private final ChatMemberService chatMemberService;
     private final UserPromptRepository userPromptRepository;
     private final LearningNoteCacheRepository learningNoteCacheRepository;
-    private final LearningNoteRagService learningNoteSearchService;
-    private final BotMemberIdProvider botMemberProvider;
+    private final LearningNoteRagPort learningNoteSearchService;
 
     private Member findMemberById(Long memberId) {
         return memberRepository.findById(memberId)
@@ -58,10 +57,9 @@ public class AIChatRoomService {
         chatAuthCacheService.addMember(savedRoom.getId(), creatorId);
 
         chatRoomMemberRepository.save(new ChatMember(creator, savedRoom.getId(), ChatRoomType.AI));
-        chatRoomMemberRepository.save(
-                new ChatMember(findMemberById(botMemberProvider.getBotMemberId()), savedRoom.getId(), ChatRoomType.AI));
+        chatRoomMemberRepository.save(new ChatMember(findMemberById(BotConstant.BOT_MEMBER_ID), savedRoom.getId(), ChatRoomType.AI));
 
-        if (req.roomType() == AiChatRoomType.TUTOR_SIMILAR) {
+        if(req.roomType() == AiChatRoomType.TUTOR_SIMILAR) {
             learningNoteSearchService.saveByRecentNotes(savedRoom.getId(), creatorId);
         }
         return AIChatRoomResp.from(savedRoom);
@@ -81,4 +79,3 @@ public class AIChatRoomService {
         chatMemberService.leaveRoom(currentUserId, roomId, ChatRoomType.AI);
     }
 }
-
